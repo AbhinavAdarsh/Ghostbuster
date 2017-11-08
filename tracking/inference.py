@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -149,7 +149,7 @@ class ExactInference(InferenceModule):
         pacmanPosition = gameState.getPacmanPosition()
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
 
         # Replace this code with a correct observation update
         # Be sure to handle the "jail" edge case where the ghost is eaten
@@ -158,11 +158,19 @@ class ExactInference(InferenceModule):
         for p in self.legalPositions:
             trueDistance = util.manhattanDistance(p, pacmanPosition)
             if emissionModel[trueDistance] > 0:
-                allPossible[p] = 1.0
+                allPossible[p] = self.beliefs[p] *emissionModel[trueDistance]
+
+        if (noisyDistance is None):
+            # print "JAil location :" + str(self.getJailPosition());
+            allPossible[self.getJailPosition()] = 1.0
+
 
         "*** END YOUR CODE HERE ***"
 
+
+
         allPossible.normalize()
+        #print allPossible
         self.beliefs = allPossible
 
     def elapseTime(self, gameState):
@@ -218,8 +226,17 @@ class ExactInference(InferenceModule):
         are used and how they combine to give us a belief distribution over new
         positions after a time update from a particular position.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        allPossible = util.Counter();
+        for previousPosition in self.legalPositions:
+            newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, previousPosition))
+
+            for nextPosition, prob in newPosDist.items():
+                allPossible[nextPosition] += prob * self.beliefs[previousPosition]
+
+        allPossible.normalize()
+
+        self.beliefs = allPossible
+
 
     def getBeliefDistribution(self):
         return self.beliefs
